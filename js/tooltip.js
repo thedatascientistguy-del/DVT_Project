@@ -83,19 +83,23 @@ class Tooltip {
     this.tooltip = d3.select('body')
       .append('div')
       .attr('class', 'tooltip')
-      .style('position', 'absolute')
-      .style('visibility', 'hidden')
-      .style('background-color', this.config.colors.panel)
-      .style('color', this.config.colors.text)
-      .style('border', `1px solid ${this.config.colors.border}`)
-      .style('border-radius', '4px')
-      .style('padding', '10px')
-      .style('font-size', '13px')
+      .style('position', 'fixed') // Changed to fixed positioning
+      .style('opacity', '0')
+      .style('background-color', 'white')
+      .style('color', '#1f2937')
+      .style('border', '3px solid #3b82f6')
+      .style('border-radius', '8px')
+      .style('padding', '12px 16px')
+      .style('font-size', '14px')
+      .style('font-weight', '500')
       .style('pointer-events', 'none')
-      .style('z-index', '1000')
-      .style('box-shadow', '0 4px 6px rgba(0, 0, 0, 0.3)')
-      .style('max-width', '300px')
-      .style('line-height', '1.5');
+      .style('z-index', '10000')
+      .style('box-shadow', '0 10px 25px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0,0,0,0.1)')
+      .style('max-width', '320px')
+      .style('line-height', '1.6')
+      .style('transition', 'opacity 0.2s ease')
+      .style('left', '0px')
+      .style('top', '0px');
   }
   
   /**
@@ -109,7 +113,7 @@ class Tooltip {
    */
   show(content, event) {
     this.tooltip
-      .style('visibility', 'visible')
+      .style('opacity', '1')
       .html(content);
     
     this.updatePosition(event);
@@ -122,7 +126,7 @@ class Tooltip {
    * tooltip.hide();
    */
   hide() {
-    this.tooltip.style('visibility', 'hidden');
+    this.tooltip.style('opacity', '0');
   }
   
   /**
@@ -148,14 +152,14 @@ class Tooltip {
     const tooltipWidth = tooltipNode.offsetWidth;
     const tooltipHeight = tooltipNode.offsetHeight;
     
-    // Calculate default position (right and above cursor)
-    let left = event.pageX + this.config.tooltip.offset.x;
-    let top = event.pageY + this.config.tooltip.offset.y;
+    // Use clientX/clientY for fixed positioning (relative to viewport)
+    let left = event.clientX + this.config.tooltip.offset.x;
+    let top = event.clientY + this.config.tooltip.offset.y;
     
     // Prevent tooltip from going off-screen horizontally
     if (left + tooltipWidth > window.innerWidth) {
       // Flip to left of cursor if it would overflow right edge
-      left = event.pageX - tooltipWidth - this.config.tooltip.offset.x;
+      left = event.clientX - tooltipWidth - this.config.tooltip.offset.x;
     }
     
     // Ensure tooltip doesn't go off left edge
@@ -166,7 +170,7 @@ class Tooltip {
     // Prevent tooltip from going off-screen vertically
     if (top + tooltipHeight > window.innerHeight) {
       // Flip above cursor if it would overflow bottom edge
-      top = event.pageY - tooltipHeight - Math.abs(this.config.tooltip.offset.y);
+      top = event.clientY - tooltipHeight - Math.abs(this.config.tooltip.offset.y);
     }
     
     // Ensure tooltip doesn't go off top edge
@@ -229,7 +233,7 @@ class Tooltip {
    * }
    */
   isVisible() {
-    return this.tooltip.style('visibility') === 'visible';
+    return this.tooltip.style('opacity') !== '0';
   }
   
   /**

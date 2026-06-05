@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive Energy Transition Analytics Dashboard - Global energy trends from 2000-2019">
+    <title>Energy Transition Analytics Dashboard</title>
+    
+    <!-- D3.js v7 CDN -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- noUiSlider for dual-handle range slider -->
+    <link rel="stylesheet" 
+          href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <!-- Dashboard Header -->
+    <header class="dashboard-header">
+        <h1>Energy Transition Analytics Dashboard</h1>
+        <p class="subtitle">Global Energy Trends 2000-2019 • 21 Interactive Visualizations</p>
+    </header>
+    
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <div class="control-group">
+            <label for="country-select">Country:</label>
+            <select id="country-select" class="filter-control">
+                <option value="All Countries">All Countries</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label for="year-slider">Year Range:</label>
+            <div id="year-slider" class="year-slider"></div>
+            <span id="year-range-label" class="range-label">2000 - 2019</span>
+        </div>
+        
+        <div class="control-group">
+            <button id="reset-filters" class="btn-reset">Reset Filters</button>
+        </div>
+    </div>
+    
+    <!-- Dashboard Grid -->
+    <main class="dashboard-grid">
+        <!-- Trend Analysis Charts (Charts 1-5) -->
+        <section class="chart-section">
+            <h2 class="section-title">Energy Trends Over Time</h2>
+            <div class="chart-row">
+                <div class="chart-container" id="chart-1">
+                    <h3 class="chart-title">Global Energy Consumption</h3>
+                    <div class="chart-content"></div>
+                </div>
+                
+                <div class="chart-container" id="chart-2">
+                    <h3 class="chart-title">CO₂ Emissions Trend</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+            
+            <div class="chart-row">
+                <div class="chart-container" id="chart-3">
+                    <h3 class="chart-title">Electricity Demand vs Generation</h3>
+                    <div class="chart-content"></div>
+                </div>
+                
+                <div class="chart-container" id="chart-4">
+                    <h3 class="chart-title">Energy Mix: Fossil vs Renewable vs Nuclear</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+            
+            <div class="chart-row">
+                <div class="chart-container chart-full" id="chart-5">
+                    <h3 class="chart-title">Electricity Generation by Source</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Composition Analysis Charts (Charts 6-8) -->
+        <section class="chart-section">
+            <h2 class="section-title">Energy Composition</h2>
+            <div class="chart-row">
+                <div class="chart-container" id="chart-6">
+                    <h3 class="chart-title">Fossil Fuel Breakdown</h3>
+                    <div class="chart-content"></div>
+                </div>
+                
+                <div class="chart-container" id="chart-7">
+                    <h3 class="chart-title">Renewable Energy Breakdown</h3>
+                    <div class="chart-content"></div>
+                </div>
+                
+                <div class="chart-container" id="chart-8">
+                    <h3 class="chart-title">Low-Carbon Energy Trend</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Ranking Analysis Charts (Charts 9-10) -->
+        <section class="chart-section">
+            <h2 class="section-title">Country Rankings</h2>
+            <div class="chart-row">
+                <div class="chart-container" id="chart-9">
+                    <h3 class="chart-title">Top Energy Consumers</h3>
+                    <div class="chart-content"></div>
+                </div>
+                
+                <div class="chart-container" id="chart-10">
+                    <h3 class="chart-title">Per Capita Energy Usage</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Comparison Analysis Chart (Chart 11) -->
+        <section class="chart-section">
+            <h2 class="section-title">Country Comparison</h2>
+            <div class="chart-row">
+                <div class="chart-container chart-full" id="chart-11">
+                    <h3 class="chart-title">Multi-Country Comparison</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Correlation Analysis Charts (Charts 12-13) -->
+        <section class="chart-section">
+            <h2 class="section-title">Correlation Analysis</h2>
+            <div class="chart-row">
+                <div class="chart-container" id="chart-12">
+                    <h3 class="chart-title">GDP vs Energy Consumption</h3>
+                    <div class="chart-content"></div>
+                </div>
+                
+                <div class="chart-container" id="chart-13">
+                    <h3 class="chart-title">Energy vs Emissions Correlation</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Advanced Metrics Charts (Charts 14-15) -->
+        <section class="chart-section">
+            <h2 class="section-title">Advanced Metrics</h2>
+            <div class="chart-row">
+                <div class="chart-container" id="chart-14">
+                    <h3 class="chart-title">Renewable Energy Growth Rate</h3>
+                    <div class="chart-content"></div>
+                </div>
+                
+                <div class="chart-container" id="chart-15">
+                    <h3 class="chart-title">Carbon Intensity of Electricity</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- New Advanced Insights Charts (Charts 16-21) -->
+        <section class="chart-section">
+            <h2 class="section-title">Transition Insights</h2>
+            <div class="chart-row">
+                <div class="chart-container" id="chart-16">
+                    <h3 class="chart-title">Energy Intensity of GDP</h3>
+                    <div class="chart-content"></div>
+                </div>
+                
+                <div class="chart-container" id="chart-17">
+                    <h3 class="chart-title">Nuclear Energy Trend</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+            
+            <div class="chart-row">
+                <div class="chart-container chart-full" id="chart-18">
+                    <h3 class="chart-title">Energy Transition Progress (%)</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+            
+            <div class="chart-row">
+                <div class="chart-container" id="chart-19">
+                    <h3 class="chart-title">Solar & Wind Growth</h3>
+                    <div class="chart-content"></div>
+                </div>
+                
+                <div class="chart-container" id="chart-20">
+                    <h3 class="chart-title">Emissions Per Capita Ranking</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+            
+            <div class="chart-row">
+                <div class="chart-container chart-full" id="chart-21">
+                    <h3 class="chart-title">Coal Consumption Trend</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <p>Energy Transition Analytics Dashboard • Data Source: Our World in Data • 2000-2019</p>
+        <p>Built with D3.js v7 • Interactive Data Visualization Project</p>
+    </footer>
+    
+    <!-- Error Message Container -->
+    <div id="error-message" class="error-message hidden">
+        <div class="error-content">
+            <h3>⚠ Error Loading Dashboard</h3>
+            <p id="error-text"></p>
+            <button id="error-close">Close</button>
+        </div>
+    </div>
+    
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="loading-indicator">
+        <div class="loading-spinner"></div>
+        <p>Loading energy data...</p>
+    </div>
+    
+    <!-- Main Application Script (ES6 Module) -->
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>

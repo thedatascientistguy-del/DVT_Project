@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test: CO₂ Emissions Trend Chart</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background-color: #0b0f1a;
+      color: #e5e7eb;
+    }
+    
+    h1 {
+      margin-bottom: 10px;
+      color: #e5e7eb;
+    }
+    
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background-color: #111827;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+    }
+    
+    h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #10b981;
+      font-size: 18px;
+    }
+    
+    .chart-container {
+      width: 100%;
+      height: 400px;
+      background-color: #0b0f1a;
+      border-radius: 4px;
+      border: 1px solid #1f2937;
+    }
+    
+    .controls {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    
+    label {
+      color: #9ca3af;
+      font-size: 14px;
+    }
+    
+    select, input {
+      padding: 5px 10px;
+      background-color: #1f2937;
+      color: #e5e7eb;
+      border: 1px solid #374151;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    button {
+      padding: 5px 15px;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #2563eb;
+    }
+    
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #1f2937;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .pass {
+      color: #10b981;
+    }
+    
+    .fail {
+      color: #ef4444;
+    }
+    
+    .info {
+      color: #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test: CO₂ Emissions Trend Chart</h1>
+  
+  <div class="test-section">
+    <h2>Test 1: Basic Rendering with All Countries</h2>
+    <div class="controls">
+      <label>Country: <select id="country1">
+        <option value="All Countries">All Countries</option>
+        <option value="United States">United States</option>
+        <option value="China">China</option>
+        <option value="India">India</option>
+      </select></label>
+      <label>Year Range: 
+        <input type="number" id="minYear1" value="2000" min="2000" max="2019" style="width: 70px;">
+        to
+        <input type="number" id="maxYear1" value="2019" min="2000" max="2019" style="width: 70px;">
+      </label>
+      <button id="update1">Update Chart</button>
+    </div>
+    <div id="chart1" class="chart-container"></div>
+    <div id="status1" class="status"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 2: Single Country View</h2>
+    <div class="controls">
+      <label>Country: <select id="country2">
+        <option value="United States">United States</option>
+        <option value="China">China</option>
+        <option value="Germany">Germany</option>
+        <option value="United Kingdom">United Kingdom</option>
+      </select></label>
+      <button id="update2">Update Chart</button>
+    </div>
+    <div id="chart2" class="chart-container"></div>
+    <div id="status2" class="status"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>Test 3: Year Range Filter</h2>
+    <div class="controls">
+      <label>Year Range: 
+        <input type="number" id="minYear3" value="2010" min="2000" max="2019" style="width: 70px;">
+        to
+        <input type="number" id="maxYear3" value="2019" min="2000" max="2019" style="width: 70px;">
+      </label>
+      <button id="update3">Update Chart</button>
+    </div>
+    <div id="chart3" class="chart-container"></div>
+    <div id="status3" class="status"></div>
+  </div>
+
+  <!-- D3.js v7 -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  
+  <!-- Load modules -->
+  <script type="module">
+    import { CONFIG } from './js/config.js';
+    import { loadEnergyData } from './js/dataLoader.js';
+    import { renderCo2EmissionsTrend } from './js/charts/co2EmissionsTrend.js';
+    
+    // Global data storage
+    let energyData = null;
+    let chart1 = null;
+    let chart2 = null;
+    let chart3 = null;
+    
+    // Load data
+    async function init() {
+      try {
+        energyData = await loadEnergyData();
+        console.log('✓ Data loaded:', energyData.length, 'records');
+        
+        // Test 1: Basic rendering with All Countries
+        setupTest1();
+        
+        // Test 2: Single country view
+        setupTest2();
+        
+        // Test 3: Year range filter
+        setupTest3();
+        
+      } catch (error) {
+        console.error('✗ Failed to load data:', error);
+        document.querySelectorAll('.status').forEach(el => {
+          el.innerHTML = '<span class="fail">✗ Failed to load data: ' + error.message + '</span>';
+        });
+      }
+    }
+    
+    function setupTest1() {
+      const filterState = {
+        country: 'All Countries',
+        yearRange: [2000, 2019]
+      };
+      
+      chart1 = renderCo2EmissionsTrend('#chart1', energyData, filterState);
+      
+      if (chart1) {
+        document.getElementById('status1').innerHTML = '<span class="pass">✓ Chart rendered successfully</span>';
+      } else {
+        document.getElementById('status1').innerHTML = '<span class="fail">✗ Chart failed to render</span>';
+      }
+      
+      // Update handler
+      document.getElementById('update1').addEventListener('click', () => {
+        const country = document.getElementById('country1').value;
+        const minYear = parseInt(document.getElementById('minYear1').value);
+        const maxYear = parseInt(document.getElementById('maxYear1').value);
+        
+        const newFilterState = {
+          country: country,
+          yearRange: [minYear, maxYear]
+        };
+        
+        chart1.update(energyData, newFilterState);
+        document.getElementById('status1').innerHTML = `<span class="info">✓ Updated to ${country}, ${minYear}-${maxYear}</span>`;
+      });
+    }
+    
+    function setupTest2() {
+      const filterState = {
+        country: 'United States',
+        yearRange: [2000, 2019]
+      };
+      
+      chart2 = renderCo2EmissionsTrend('#chart2', energyData, filterState);
+      
+      if (chart2) {
+        document.getElementById('status2').innerHTML = '<span class="pass">✓ Chart rendered successfully</span>';
+      } else {
+        document.getElementById('status2').innerHTML = '<span class="fail">✗ Chart failed to render</span>';
+      }
+      
+      // Update handler
+      document.getElementById('update2').addEventListener('click', () => {
+        const country = document.getElementById('country2').value;
+        
+        const newFilterState = {
+          country: country,
+          yearRange: [2000, 2019]
+        };
+        
+        chart2.update(energyData, newFilterState);
+        document.getElementById('status2').innerHTML = `<span class="info">✓ Updated to ${country}</span>`;
+      });
+    }
+    
+    function setupTest3() {
+      const filterState = {
+        country: 'All Countries',
+        yearRange: [2010, 2019]
+      };
+      
+      chart3 = renderCo2EmissionsTrend('#chart3', energyData, filterState);
+      
+      if (chart3) {
+        document.getElementById('status3').innerHTML = '<span class="pass">✓ Chart rendered successfully</span>';
+      } else {
+        document.getElementById('status3').innerHTML = '<span class="fail">✗ Chart failed to render</span>';
+      }
+      
+      // Update handler
+      document.getElementById('update3').addEventListener('click', () => {
+        const minYear = parseInt(document.getElementById('minYear3').value);
+        const maxYear = parseInt(document.getElementById('maxYear3').value);
+        
+        const newFilterState = {
+          country: 'All Countries',
+          yearRange: [minYear, maxYear]
+        };
+        
+        chart3.update(energyData, newFilterState);
+        document.getElementById('status3').innerHTML = `<span class="info">✓ Updated to ${minYear}-${maxYear}</span>`;
+      });
+    }
+    
+    // Start
+    init();
+  </script>
+</body>
+</html>

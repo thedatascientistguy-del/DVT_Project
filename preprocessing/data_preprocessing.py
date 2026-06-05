@@ -53,7 +53,7 @@ def handle_missing_values(df):
     Strategy:
     - Remove rows with >50% missing values
     - Interpolate numeric columns for time series continuity
-    - Remove columns with >30% missing data
+    - Remove columns with >30% missing data (except required columns)
     
     Args:
         df (pd.DataFrame): Input dataframe
@@ -75,13 +75,24 @@ def handle_missing_values(df):
     # Store column names before removal
     cols_before = set(df.columns)
     
-    # Remove columns with >30% missing data
+    # Define columns that must be preserved even if sparse
+    required_columns = {
+        'country', 'year', 'population', 'gdp',
+        'coal_consumption', 'oil_consumption', 'gas_consumption',
+        'renewables_consumption', 'nuclear_consumption', 
+        'fossil_fuel_consumption', 'greenhouse_gas_emissions',
+        'electricity_demand', 'electricity_generation',
+        'carbon_intensity_elec', 'energy_per_capita'
+    }
+    
+    # Remove columns with >30% missing data (except required columns)
     missing_pct = df.isnull().sum() / len(df)
-    sparse_cols = missing_pct[missing_pct > 0.3].index.tolist()
+    sparse_cols = [col for col in missing_pct[missing_pct > 0.3].index 
+                   if col not in required_columns]
     df = df.drop(columns=sparse_cols)
     
     if sparse_cols:
-        print(f"✓ Removed {len(sparse_cols)} sparse columns: {', '.join(sparse_cols)}")
+        print(f"✓ Removed {len(sparse_cols)} sparse columns (preserving required columns)")
     
     # Interpolate remaining numeric columns (for time series continuity)
     numeric_cols = df.select_dtypes(include=[np.number]).columns

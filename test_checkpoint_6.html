@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkpoint 6 - Core Infrastructure Tests</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #0b0f1a;
+            color: #e5e7eb;
+        }
+        h1 {
+            color: #10b981;
+            border-bottom: 3px solid #10b981;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #06b6d4;
+            margin-top: 30px;
+        }
+        .test-section {
+            background-color: #111827;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #1f2937;
+            margin: 20px 0;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 12px;
+            border-left: 4px solid #10b981;
+            background-color: #0b0f1a;
+            border-radius: 4px;
+        }
+        .test-result.fail {
+            border-left-color: #ef4444;
+        }
+        .test-result.warning {
+            border-left-color: #f59e0b;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+        .warning { color: #f59e0b; }
+        .info { color: #06b6d4; }
+        
+        button {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+            font-weight: 600;
+        }
+        button:hover {
+            background-color: #059669;
+        }
+        button:disabled {
+            background-color: #6b7280;
+            cursor: not-allowed;
+        }
+        
+        .summary {
+            background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+            padding: 25px;
+            border-radius: 8px;
+            border: 2px solid #10b981;
+            margin: 30px 0;
+        }
+        .summary h2 {
+            margin-top: 0;
+            color: #10b981;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background-color: #0b0f1a;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+        pre {
+            background-color: #0b0f1a;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #1f2937;
+            font-size: 13px;
+        }
+        .progress {
+            width: 100%;
+            height: 30px;
+            background-color: #1f2937;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Checkpoint 6: Core Infrastructure Complete</h1>
+    <p>This test suite validates all core infrastructure components before proceeding to chart implementation.</p>
+    
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="location.href='test_utils.html'">Open Utils Tests</button>
+        <button onclick="location.href='test_filters.html'">Open Filters Tests</button>
+        <button onclick="location.href='test_dataloader.html'">Open DataLoader Tests</button>
+    </div>
+
+    <div id="progress-section" style="display: none;">
+        <div class="progress">
+            <div id="progress-bar" class="progress-bar">0%</div>
+        </div>
+    </div>
+
+    <div id="summary" style="display: none;"></div>
+    <div id="results"></div>
+
+    <script type="module">
+        import { CONFIG, getSourceColor } from './js/config.js';
+        import { loadEnergyData, validateData } from './js/dataLoader.js';
+        import {
+            aggregateByYear,
+            filterByCountry,
+            filterByYearRange,
+            getUniqueCountries,
+            formatNumber,
+            formatPercent
+        } from './js/utils.js';
+        import { Tooltip } from './js/tooltip.js';
+        import { FilterManager } from './js/filters.js';
+        
+        let testResults = [];
+        let loadedData = null;
+        
+        function addTestResult(category, testName, passed, details = '') {
+            testResults.push({ category, testName, passed, details });
+        }
+        
+        function updateProgress(current, total) {
+            const percent = Math.round((current / total) * 100);
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) {
+                progressBar.style.width = percent + '%';
+                progressBar.textContent = percent + '%';
+            }
+        }
+        
+        window.runAllTests = async function() {
+            testResults = [];
+            const resultsDiv = document.getElementById('results');
+            const summaryDiv = document.getElementById('summary');
+            const progressSection = document.getElementById('progress-section');
+            
+            resultsDiv.innerHTML = '';
+            summaryDiv.style.display = 'none';
+            progressSection.style.display = 'block';
+            
+            let testCount = 0;
+            const totalTests = 6;
+            
+            // Test 1: CONFIG Module
+            updateProgress(++testCount, totalTests);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            testConfigModule();
+            
+            // Test 2: Data Loader
+            updateProgress(++testCount, totalTests);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            await testDataLoader();
+            
+            // Test 3: Utils Module
+            updateProgress(++testCount, totalTests);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            testUtilsModule();
+            
+            // Test 4: Tooltip System
+            updateProgress(++testCount, totalTests);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            testTooltipSystem();
+            
+            // Test 5: Filter Manager
+            updateProgress(++testCount, totalTests);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            testFilterManager();
+            
+            // Test 6: Integration
+            updateProgress(++testCount, totalTests);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (loadedData) {
+                testIntegration();
+            }
+            
+            // Display results
+            progressSection.style.display = 'none';
+            displayResults();
+        };
+        
+        function testConfigModule() {
+            const category = 'CONFIG Module';
+            
+            try {
+                // Test CONFIG object exists
+                if (typeof CONFIG === 'object') {
+                    addTestResult(category, 'CONFIG object exported', true, 'CONFIG is accessible');
+                } else {
+                    addTestResult(category, 'CONFIG object exported', false, 'CONFIG is not an object');
+                    return;
+                }
+                
+                // Test color definitions
+                const requiredColors = ['coal', 'oil', 'gas', 'renewables', 'nuclear', 'emissions'];
+                const missingColors = requiredColors.filter(c => !CONFIG.colors[c]);
+                
+                if (missingColors.length === 0) {
+                    addTestResult(category, 'Color scheme complete', true, 
+                        `All ${requiredColors.length} required colors defined`);
+                } else {
+                    addTestResult(category, 'Color scheme complete', false, 
+                        `Missing colors: ${missingColors.join(', ')}`);
+                }
+                
+                // Test animation config
+                if (CONFIG.animation && CONFIG.animation.duration === 500) {
+                    addTestResult(category, 'Animation config', true, 
+                        'Duration set to 500ms as specified');
+                } else {
+                    addTestResult(category, 'Animation config', false, 
+                        `Duration is ${CONFIG.animation?.duration}ms, expected 500ms`);
+                }
+                
+                // Test helper function
+                const coalColor = getSourceColor('coal');
+                if (coalColor === CONFIG.colors.coal) {
+                    addTestResult(category, 'getSourceColor() helper', true, 
+                        'Helper function returns correct colors');
+                } else {
+                    addTestResult(category, 'getSourceColor() helper', false, 
+                        'Helper function returned incorrect color');
+                }
+                
+            } catch (e) {
+                addTestResult(category, 'CONFIG Module', false, e.message);
+            }
+        }
+        
+        async function testDataLoader() {
+            const category = 'Data Loader';
+            
+            try {
+                // Test data loading
+                loadedData = await loadEnergyData();
+                
+                if (loadedData && loadedData.length > 0) {
+                    addTestResult(category, 'CSV data loading', true, 
+                        `Loaded ${loadedData.length.toLocaleString()} records`);
+                } else {
+                    addTestResult(category, 'CSV data loading', false, 
+                        'No data loaded');
+                    return;
+                }
+                
+                // Test data validation
+                try {
+                    validateData(loadedData);
+                    addTestResult(category, 'Data validation', true, 
+                        'All validation checks passed');
+                } catch (e) {
+                    addTestResult(category, 'Data validation', false, e.message);
+                }
+                
+                // Test year range filtering
+                const years = [...new Set(loadedData.map(d => d.year))];
+                const validYears = years.every(y => y >= 2000 && y <= 2019);
+                
+                if (validYears) {
+                    addTestResult(category, 'Year range (2000-2019)', true, 
+                        `Years: ${Math.min(...years)} - ${Math.max(...years)}`);
+                } else {
+                    addTestResult(category, 'Year range (2000-2019)', false, 
+                        'Found years outside 2000-2019 range');
+                }
+                
+                // Test required fields
+                const firstRecord = loadedData[0];
+                const requiredFields = ['country', 'year', 'total_energy'];
+                const hasAllFields = requiredFields.every(f => firstRecord.hasOwnProperty(f));
+                
+                if (hasAllFields) {
+                    addTestResult(category, 'Required fields present', true, 
+                        'country, year, total_energy fields exist');
+                } else {
+                    addTestResult(category, 'Required fields present', false, 
+                        'Missing required fields');
+                }
+                
+            } catch (e) {
+                addTestResult(category, 'Data loading', false, e.message);
+            }
+        }
+        
+        function testUtilsModule() {
+            const category = 'Utils Module';
+            
+            if (!loadedData) {
+                addTestResult(category, 'Utils tests', false, 'No data loaded - skipping utils tests');
+                return;
+            }
+            
+            try {
+                // Test aggregateByYear
+                const aggregated = aggregateByYear(loadedData, 'total_energy');
+                if (aggregated.length > 0 && aggregated[0].hasOwnProperty('year') && aggregated[0].hasOwnProperty('value')) {
+                    addTestResult(category, 'aggregateByYear()', true, 
+                        `Generated ${aggregated.length} year aggregations`);
+                } else {
+                    addTestResult(category, 'aggregateByYear()', false, 
+                        'Aggregation returned invalid structure');
+                }
+                
+                // Test filterByCountry
+                const usaData = filterByCountry(loadedData, 'United States');
+                const allData = filterByCountry(loadedData, 'All Countries');
+                
+                if (usaData.length > 0 && allData.length === loadedData.length) {
+                    addTestResult(category, 'filterByCountry()', true, 
+                        `USA: ${usaData.length} records, All: ${allData.length} records`);
+                } else {
+                    addTestResult(category, 'filterByCountry()', false, 
+                        'Filter returned unexpected results');
+                }
+                
+                // Test getUniqueCountries
+                const countries = getUniqueCountries(loadedData);
+                if (countries[0] === 'All Countries' && countries.length > 1) {
+                    addTestResult(category, 'getUniqueCountries()', true, 
+                        `Found ${countries.length} countries (includes "All Countries")`);
+                } else {
+                    addTestResult(category, 'getUniqueCountries()', false, 
+                        'Country list incorrect');
+                }
+                
+                // Test formatNumber
+                const formatted = formatNumber(1500000);
+                if (formatted === '1.50M') {
+                    addTestResult(category, 'formatNumber()', true, 
+                        '1,500,000 → 1.50M');
+                } else {
+                    addTestResult(category, 'formatNumber()', false, 
+                        `Expected "1.50M", got "${formatted}"`);
+                }
+                
+                // Test formatPercent
+                const percent = formatPercent(45.6);
+                if (percent === '45.6%') {
+                    addTestResult(category, 'formatPercent()', true, 
+                        '45.6 → 45.6%');
+                } else {
+                    addTestResult(category, 'formatPercent()', false, 
+                        `Expected "45.6%", got "${percent}"`);
+                }
+                
+            } catch (e) {
+                addTestResult(category, 'Utils module', false, e.message);
+            }
+        }
+        
+        function testTooltipSystem() {
+            const category = 'Tooltip System';
+            
+            try {
+                // Test Tooltip instantiation
+                const tooltip = new Tooltip();
+                
+                if (tooltip) {
+                    addTestResult(category, 'Tooltip instantiation', true, 
+                        'Tooltip object created successfully');
+                } else {
+                    addTestResult(category, 'Tooltip instantiation', false, 
+                        'Failed to create Tooltip');
+                    return;
+                }
+                
+                // Test show method
+                if (typeof tooltip.show === 'function') {
+                    addTestResult(category, 'show() method', true, 
+                        'Method exists and is callable');
+                } else {
+                    addTestResult(category, 'show() method', false, 
+                        'show() method not found');
+                }
+                
+                // Test hide method
+                if (typeof tooltip.hide === 'function') {
+                    addTestResult(category, 'hide() method', true, 
+                        'Method exists and is callable');
+                } else {
+                    addTestResult(category, 'hide() method', false, 
+                        'hide() method not found');
+                }
+                
+                // Test formatContent helper
+                if (typeof tooltip.formatContent === 'function') {
+                    const formatted = tooltip.formatContent({ 'Year': 2020, 'Value': 100 });
+                    if (formatted.includes('Year') && formatted.includes('2020')) {
+                        addTestResult(category, 'formatContent() helper', true, 
+                            'Formats data objects correctly');
+                    } else {
+                        addTestResult(category, 'formatContent() helper', false, 
+                            'Format output incorrect');
+                    }
+                } else {
+                    addTestResult(category, 'formatContent() helper', false, 
+                        'formatContent() method not found');
+                }
+                
+                // Clean up
+                tooltip.remove();
+                
+            } catch (e) {
+                addTestResult(category, 'Tooltip system', false, e.message);
+            }
+        }
+        
+        function testFilterManager() {
+            const category = 'Filter Manager';
+            
+            try {
+                // Test FilterManager instantiation
+                const fm = new FilterManager();
+                
+                if (fm) {
+                    addTestResult(category, 'FilterManager instantiation', true, 
+                        'FilterManager created successfully');
+                } else {
+                    addTestResult(category, 'FilterManager instantiation', false, 
+                        'Failed to create FilterManager');
+                    return;
+                }
+                
+                // Test default state
+                const state = fm.getState();
+                if (state.country === 'All Countries' && 
+                    state.yearRange[0] === 2000 && 
+                    state.yearRange[1] === 2019) {
+                    addTestResult(category, 'Default state', true, 
+                        'Country: All Countries, Years: 2000-2019');
+                } else {
+                    addTestResult(category, 'Default state', false, 
+                        `Incorrect default state: ${JSON.stringify(state)}`);
+                }
+                
+                // Test subscribe/notify
+                let notified = false;
+                fm.subscribe((state) => {
+                    notified = true;
+                });
+                fm.setCountry('United States');
+                
+                if (notified) {
+                    addTestResult(category, 'Observer pattern', true, 
+                        'Subscribers notified on state change');
+                } else {
+                    addTestResult(category, 'Observer pattern', false, 
+                        'Subscribers not notified');
+                }
+                
+                // Test setYearRange
+                fm.setYearRange(2010, 2015);
+                const newState = fm.getState();
+                
+                if (newState.yearRange[0] === 2010 && newState.yearRange[1] === 2015) {
+                    addTestResult(category, 'setYearRange()', true, 
+                        'Year range updated correctly');
+                } else {
+                    addTestResult(category, 'setYearRange()', false, 
+                        'Year range not updated');
+                }
+                
+            } catch (e) {
+                addTestResult(category, 'Filter Manager', false, e.message);
+            }
+        }
+        
+        function testIntegration() {
+            const category = 'Integration';
+            
+            try {
+                // Test end-to-end workflow
+                const fm = new FilterManager();
+                
+                // Set filters
+                fm.setCountry('United States');
+                fm.setYearRange(2010, 2015);
+                
+                // Apply filters to data
+                const state = fm.getState();
+                let filtered = filterByCountry(loadedData, state.country);
+                filtered = filterByYearRange(filtered, ...state.yearRange);
+                
+                // Aggregate
+                const aggregated = aggregateByYear(filtered, 'total_energy');
+                
+                if (aggregated.length > 0) {
+                    addTestResult(category, 'End-to-end workflow', true, 
+                        `Filter → Aggregate: ${aggregated.length} data points`);
+                } else {
+                    addTestResult(category, 'End-to-end workflow', false, 
+                        'No data after filtering and aggregation');
+                }
+                
+                // Test formatting pipeline
+                const avgEnergy = d3.mean(aggregated, d => d.value);
+                const formatted = formatNumber(avgEnergy);
+                
+                if (formatted.includes('K') || formatted.includes('M') || formatted.includes('B')) {
+                    addTestResult(category, 'Data formatting pipeline', true, 
+                        `Average energy: ${formatted}`);
+                } else {
+                    addTestResult(category, 'Data formatting pipeline', false, 
+                        'Formatting not applied correctly');
+                }
+                
+            } catch (e) {
+                addTestResult(category, 'Integration', false, e.message);
+            }
+        }
+        
+        function displayResults() {
+            const resultsDiv = document.getElementById('results');
+            const summaryDiv = document.getElementById('summary');
+            
+            // Calculate statistics
+            const passedCount = testResults.filter(r => r.passed).length;
+            const failedCount = testResults.filter(r => !r.passed).length;
+            const totalCount = testResults.length;
+            const passRate = ((passedCount / totalCount) * 100).toFixed(1);
+            
+            // Group by category
+            const categories = [...new Set(testResults.map(r => r.category))];
+            
+            // Display summary
+            summaryDiv.style.display = 'block';
+            summaryDiv.innerHTML = `
+                <h2>📊 Test Summary</h2>
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">${totalCount}</div>
+                        <div class="stat-label">Total Tests</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: #10b981;">${passedCount}</div>
+                        <div class="stat-label">Passed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" style="color: #ef4444;">${failedCount}</div>
+                        <div class="stat-label">Failed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${passRate}%</div>
+                        <div class="stat-label">Pass Rate</div>
+                    </div>
+                </div>
+                ${failedCount === 0 ? 
+                    '<p style="color: #10b981; font-size: 18px; text-align: center; margin-top: 20px;">✓ All tests passed! Core infrastructure is ready.</p>' :
+                    '<p style="color: #f59e0b; font-size: 18px; text-align: center; margin-top: 20px;">⚠ Some tests failed. Review results below.</p>'
+                }
+            `;
+            
+            // Display detailed results
+            let html = '';
+            
+            categories.forEach(category => {
+                const categoryTests = testResults.filter(r => r.category === category);
+                const categoryPassed = categoryTests.filter(r => r.passed).length;
+                const categoryTotal = categoryTests.length;
+                
+                html += `
+                    <div class="test-section">
+                        <h2>${category} (${categoryPassed}/${categoryTotal})</h2>
+                        ${categoryTests.map(r => `
+                            <div class="test-result ${r.passed ? '' : 'fail'}">
+                                <strong class="${r.passed ? 'success' : 'error'}">
+                                    ${r.passed ? '✓' : '✗'} ${r.testName}
+                                </strong>
+                                ${r.details ? `<br><small class="info">${r.details}</small>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

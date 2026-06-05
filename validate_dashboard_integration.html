@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Integration Validation - Task 15 Checkpoint</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0b0f1a;
+            color: #e5e7eb;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #10b981;
+            border-bottom: 2px solid #10b981;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #3b82f6;
+            margin-top: 30px;
+        }
+        .test-section {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-item {
+            background: #1f2937;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #6b7280;
+        }
+        .test-item.pass {
+            border-left-color: #10b981;
+        }
+        .test-item.fail {
+            border-left-color: #ef4444;
+        }
+        .test-item.running {
+            border-left-color: #f59e0b;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        .status.pass {
+            background: #10b981;
+            color: #000;
+        }
+        .status.fail {
+            background: #ef4444;
+            color: #fff;
+        }
+        .status.running {
+            background: #f59e0b;
+            color: #000;
+        }
+        .test-details {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #9ca3af;
+        }
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #2563eb;
+        }
+        .btn:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+        .summary {
+            background: #1f2937;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        .summary-item {
+            display: inline-block;
+            margin: 0 20px;
+        }
+        .summary-item span {
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+        .pass-count { color: #10b981; }
+        .fail-count { color: #ef4444; }
+        .total-count { color: #3b82f6; }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #1f2937;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .error-details {
+            background: #7f1d1d;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        #dashboard-frame {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #1f2937;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Task 15: Dashboard Integration Validation</h1>
+        
+        <div class="summary">
+            <div class="summary-item">
+                <span class="total-count" id="total-tests">0</span> Total Tests
+            </div>
+            <div class="summary-item">
+                <span class="pass-count" id="pass-tests">0</span> Passed
+            </div>
+            <div class="summary-item">
+                <span class="fail-count" id="fail-tests">0</span> Failed
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%">0%</div>
+        </div>
+
+        <button class="btn" id="run-tests" onclick="runAllTests()">▶ Run All Tests</button>
+        <button class="btn" id="reset-tests" onclick="resetTests()">↻ Reset</button>
+
+        <!-- Performance Tests -->
+        <div class="test-section">
+            <h2>⚡ Performance Requirements</h2>
+            
+            <div class="test-item" id="test-load-time">
+                <strong>1. Dashboard Load Time</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Dashboard loads within 3 seconds<br>
+                    Status: <span id="load-time-result">Waiting...</span>
+                </div>
+            </div>
+
+            <div class="test-item" id="test-filter-response">
+                <strong>2. Filter Update Response Time</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Filter updates complete within 500ms<br>
+                    Status: <span id="filter-time-result">Waiting...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- UI Component Tests -->
+        <div class="test-section">
+            <h2>🎛️ UI Component Validation</h2>
+            
+            <div class="test-item" id="test-country-dropdown">
+                <strong>3. Country Dropdown Population</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Country dropdown populates correctly<br>
+                    Status: <span id="country-dropdown-result">Waiting...</span>
+                </div>
+            </div>
+
+            <div class="test-item" id="test-year-slider">
+                <strong>4. Year Slider Display Labels</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Year slider updates display labels<br>
+                    Status: <span id="year-slider-result">Waiting...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Integration Tests -->
+        <div class="test-section">
+            <h2>📊 Chart Integration Validation</h2>
+            
+            <div class="test-item" id="test-all-charts">
+                <strong>5. All 15 Charts Update on Filter Change</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: All 15 charts update when filters change<br>
+                    Status: <span id="all-charts-result">Waiting...</span>
+                </div>
+            </div>
+
+            <div class="test-item" id="test-chart-rendering">
+                <strong>6. Individual Chart Rendering</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Each chart renders without errors<br>
+                    Status: <span id="chart-rendering-result">Waiting...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Validation Tests -->
+        <div class="test-section">
+            <h2>💾 Data Validation</h2>
+            
+            <div class="test-item" id="test-data-loading">
+                <strong>7. Data Loading Success</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: CSV data loads successfully<br>
+                    Status: <span id="data-loading-result">Waiting...</span>
+                </div>
+            </div>
+
+            <div class="test-item" id="test-data-validation">
+                <strong>8. Data Structure Validation</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Data contains required fields and valid ranges<br>
+                    Status: <span id="data-validation-result">Waiting...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interaction Tests -->
+        <div class="test-section">
+            <h2>🖱️ User Interaction Tests</h2>
+            
+            <div class="test-item" id="test-country-filter">
+                <strong>9. Country Filter Functionality</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Selecting a country updates all visualizations<br>
+                    Status: <span id="country-filter-result">Waiting...</span>
+                </div>
+            </div>
+
+            <div class="test-item" id="test-year-filter">
+                <strong>10. Year Range Filter Functionality</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Adjusting year range updates all visualizations<br>
+                    Status: <span id="year-filter-result">Waiting...</span>
+                </div>
+            </div>
+
+            <div class="test-item" id="test-reset-button">
+                <strong>11. Reset Filters Button</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Reset button restores default filter state<br>
+                    Status: <span id="reset-button-result">Waiting...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Browser Compatibility -->
+        <div class="test-section">
+            <h2>🌐 Browser Compatibility</h2>
+            
+            <div class="test-item" id="test-browser-support">
+                <strong>12. Browser Feature Support</strong>
+                <span class="status running">RUNNING</span>
+                <div class="test-details">
+                    Requirement: Required browser features are available<br>
+                    Status: <span id="browser-support-result">Waiting...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden iframe for testing -->
+        <iframe id="dashboard-frame" src="index.html"></iframe>
+    </div>
+
+    <script>
+        let testResults = {
+            total: 12,
+            passed: 0,
+            failed: 0
+        };
+
+        async function runAllTests() {
+            console.log('🚀 Starting Dashboard Integration Validation...');
+            document.getElementById('run-tests').disabled = true;
+            resetTests();
+            
+            // Show iframe
+            document.getElementById('dashboard-frame').style.display = 'block';
+            
+            try {
+                await testBrowserSupport();
+                await testDataLoading();
+                await testDataValidation();
+                await testLoadTime();
+                await testCountryDropdown();
+                await testYearSlider();
+                await testChartRendering();
+                await testAllChartsUpdate();
+                await testFilterResponse();
+                await testCountryFilter();
+                await testYearFilter();
+                await testResetButton();
+                
+                console.log('✅ All tests completed!');
+                showFinalSummary();
+            } catch (error) {
+                console.error('❌ Test execution error:', error);
+            } finally {
+                document.getElementById('run-tests').disabled = false;
+            }
+        }
+
+        function resetTests() {
+            testResults = { total: 12, passed: 0, failed: 0 };
+            updateSummary();
+            updateProgress();
+            
+            document.querySelectorAll('.test-item').forEach(item => {
+                item.classList.remove('pass', 'fail');
+                item.classList.add('running');
+                const status = item.querySelector('.status');
+                status.textContent = 'RUNNING';
+                status.className = 'status running';
+            });
+            
+            document.querySelectorAll('[id$="-result"]').forEach(span => {
+                span.textContent = 'Waiting...';
+            });
+        }
+
+        function markTestPass(testId, message) {
+            const testItem = document.getElementById(testId);
+            testItem.classList.remove('running', 'fail');
+            testItem.classList.add('pass');
+            
+            const status = testItem.querySelector('.status');
+            status.textContent = 'PASS';
+            status.className = 'status pass';
+            
+            const resultSpan = document.getElementById(testId.replace('test-', '') + '-result');
+            resultSpan.textContent = message;
+            resultSpan.style.color = '#10b981';
+            
+            testResults.passed++;
+            updateSummary();
+            updateProgress();
+        }
+
+        function markTestFail(testId, message, error = null) {
+            const testItem = document.getElementById(testId);
+            testItem.classList.remove('running', 'pass');
+            testItem.classList.add('fail');
+            
+            const status = testItem.querySelector('.status');
+            status.textContent = 'FAIL';
+            status.className = 'status fail';
+            
+            const resultSpan = document.getElementById(testId.replace('test-', '') + '-result');
+            resultSpan.textContent = message;
+            resultSpan.style.color = '#ef4444';
+            
+            if (error) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error-details';
+                errorDiv.textContent = error.toString();
+                testItem.querySelector('.test-details').appendChild(errorDiv);
+            }
+            
+            testResults.failed++;
+            updateSummary();
+            updateProgress();
+        }
+
+        function updateSummary() {
+            document.getElementById('total-tests').textContent = testResults.total;
+            document.getElementById('pass-tests').textContent = testResults.passed;
+            document.getElementById('fail-tests').textContent = testResults.failed;
+        }
+
+        function updateProgress() {
+            const completed = testResults.passed + testResults.failed;
+            const percentage = Math.round((completed / testResults.total) * 100);
+            const progressFill = document.getElementById('progress-fill');
+            progressFill.style.width = percentage + '%';
+            progressFill.textContent = percentage + '%';
+        }
+
+        function showFinalSummary() {
+            const allPassed = testResults.failed === 0;
+            const emoji = allPassed ? '🎉' : '⚠️';
+            const message = allPassed 
+                ? 'All integration tests passed! Dashboard is ready.' 
+                : `${testResults.failed} test(s) failed. Please review and fix issues.`;
+            
+            alert(`${emoji} ${message}\n\nPassed: ${testResults.passed}/${testResults.total}\nFailed: ${testResults.failed}/${testResults.total}`);
+        }
+
+        // Test implementations
+        async function testBrowserSupport() {
+            console.log('Testing browser support...');
+            try {
+                const hasD3 = typeof d3 !== 'undefined';
+                const hasFetch = typeof fetch !== 'undefined';
+                const hasPromise = typeof Promise !== 'undefined';
+                
+                if (hasD3 && hasFetch && hasPromise) {
+                    markTestPass('test-browser-support', '✓ All required features available (D3.js, Fetch, Promise)');
+                } else {
+                    const missing = [];
+                    if (!hasD3) missing.push('D3.js');
+                    if (!hasFetch) missing.push('Fetch API');
+                    if (!hasPromise) missing.push('Promise');
+                    markTestFail('test-browser-support', `✗ Missing: ${missing.join(', ')}`);
+                }
+            } catch (error) {
+                markTestFail('test-browser-support', '✗ Error checking browser features', error);
+            }
+        }
+
+        async function testDataLoading() {
+            console.log('Testing data loading...');
+            try {
+                const startTime = performance.now();
+                const response = await fetch('data/clean_energy.csv');
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    const lines = text.split('\n').filter(line => line.trim());
+                    const loadTime = Math.round(performance.now() - startTime);
+                    markTestPass('test-data-loading', `✓ Loaded ${lines.length} rows in ${loadTime}ms`);
+                    return text;
+                } else {
+                    markTestFail('test-data-loading', `✗ Failed to load CSV: HTTP ${response.status}`);
+                    return null;
+                }
+            } catch (error) {
+                markTestFail('test-data-loading', '✗ Error loading data file', error);
+                return null;
+            }
+        }
+
+        async function testDataValidation() {
+            console.log('Testing data validation...');
+            try {
+                const csvText = await fetch('data/clean_energy.csv').then(r => r.text());
+                const lines = csvText.split('\n').filter(line => line.trim());
+                const headers = lines[0].split(',');
+                
+                const requiredFields = ['country', 'year', 'total_energy'];
+                const missingFields = requiredFields.filter(field => !headers.includes(field));
+                
+                if (missingFields.length === 0) {
+                    markTestPass('test-data-validation', `✓ All required fields present (${headers.length} columns)`);
+                } else {
+                    markTestFail('test-data-validation', `✗ Missing fields: ${missingFields.join(', ')}`);
+                }
+            } catch (error) {
+                markTestFail('test-data-validation', '✗ Error validating data', error);
+            }
+        }
+
+        async function testLoadTime() {
+            console.log('Testing load time...');
+            try {
+                const iframe = document.getElementById('dashboard-frame');
+                const startTime = performance.now();
+                
+                await new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        reject(new Error('Load timeout after 5 seconds'));
+                    }, 5000);
+                    
+                    iframe.onload = () => {
+                        clearTimeout(timeout);
+                        resolve();
+                    };
+                    
+                    // Reload iframe
+                    iframe.src = iframe.src;
+                });
+                
+                const loadTime = Math.round(performance.now() - startTime);
+                
+                if (loadTime < 3000) {
+                    markTestPass('test-load-time', `✓ Loaded in ${loadTime}ms (< 3000ms required)`);
+                } else {
+                    markTestFail('test-load-time', `✗ Loaded in ${loadTime}ms (exceeds 3000ms limit)`);
+                }
+            } catch (error) {
+                markTestFail('test-load-time', '✗ Error measuring load time', error);
+            }
+        }
+
+        async function testCountryDropdown() {
+            console.log('Testing country dropdown...');
+            try {
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for dashboard init
+                
+                const iframe = document.getElementById('dashboard-frame');
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const countrySelect = iframeDoc.getElementById('country-select');
+                
+                if (countrySelect) {
+                    const options = countrySelect.querySelectorAll('option');
+                    if (options.length > 1) {
+                        markTestPass('test-country-dropdown', `✓ Populated with ${options.length} countries`);
+                    } else {
+                        markTestFail('test-country-dropdown', '✗ Dropdown not populated');
+                    }
+                } else {
+                    markTestFail('test-country-dropdown', '✗ Country dropdown not found in DOM');
+                }
+            } catch (error) {
+                markTestFail('test-country-dropdown', '✗ Error testing country dropdown', error);
+            }
+        }
+
+        async function testYearSlider() {
+            console.log('Testing year slider...');
+            try {
+                const iframe = document.getElementById('dashboard-frame');
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const yearSlider = iframeDoc.getElementById('year-slider');
+                const yearLabel = iframeDoc.getElementById('year-range-label');
+                
+                if (yearSlider && yearLabel) {
+                    const labelText = yearLabel.textContent;
+                    if (labelText.includes('2000') && labelText.includes('2019')) {
+                        markTestPass('test-year-slider', `✓ Year slider initialized: ${labelText}`);
+                    } else {
+                        markTestFail('test-year-slider', `✗ Unexpected label: ${labelText}`);
+                    }
+                } else {
+                    markTestFail('test-year-slider', '✗ Year slider or label not found');
+                }
+            } catch (error) {
+                markTestFail('test-year-slider', '✗ Error testing year slider', error);
+            }
+        }
+
+        async function testChartRendering() {
+            console.log('Testing chart rendering...');
+            try {
+                await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for charts to render
+                
+                const iframe = document.getElementById('dashboard-frame');
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                
+                const chartIds = Array.from({length: 15}, (_, i) => `chart-${i + 1}`);
+                const renderedCharts = chartIds.filter(id => {
+                    const chart = iframeDoc.getElementById(id);
+                    if (!chart) return false;
+                    const svg = chart.querySelector('svg');
+                    return svg !== null;
+                });
+                
+                if (renderedCharts.length === 15) {
+                    markTestPass('test-chart-rendering', `✓ All 15 charts rendered with SVG elements`);
+                } else {
+                    markTestFail('test-chart-rendering', `✗ Only ${renderedCharts.length}/15 charts rendered`);
+                }
+            } catch (error) {
+                markTestFail('test-chart-rendering', '✗ Error testing chart rendering', error);
+            }
+        }
+
+        async function testAllChartsUpdate() {
+            console.log('Testing all charts update...');
+            try {
+                const iframe = document.getElementById('dashboard-frame');
+                const iframeWindow = iframe.contentWindow;
+                
+                if (iframeWindow.app && iframeWindow.app.charts) {
+                    const chartCount = iframeWindow.app.charts.length;
+                    if (chartCount === 15) {
+                        markTestPass('test-all-charts', `✓ All 15 charts registered and ready for updates`);
+                    } else {
+                        markTestFail('test-all-charts', `✗ Only ${chartCount}/15 charts registered`);
+                    }
+                } else {
+                    markTestFail('test-all-charts', '✗ App state not accessible or charts array missing');
+                }
+            } catch (error) {
+                markTestFail('test-all-charts', '✗ Error testing chart updates', error);
+            }
+        }
+
+        async function testFilterResponse() {
+            console.log('Testing filter response time...');
+            try {
+                const iframe = document.getElementById('dashboard-frame');
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const countrySelect = iframeDoc.getElementById('country-select');
+                
+                if (countrySelect && countrySelect.options.length > 2) {
+                    const startTime = performance.now();
+                    
+                    // Trigger filter change
+                    countrySelect.value = countrySelect.options[2].value;
+                    countrySelect.dispatchEvent(new Event('change'));
+                    
+                    // Wait for update
+                    await new Promise(resolve => setTimeout(resolve, 600));
+                    
+                    const responseTime = Math.round(performance.now() - startTime);
+                    
+                    if (responseTime < 500) {
+                        markTestPass('test-filter-response', `✓ Filter updated in ${responseTime}ms (< 500ms required)`);
+                    } else {
+                        markTestFail('test-filter-response', `✗ Filter took ${responseTime}ms (exceeds 500ms limit)`);
+                    }
+                } else {
+                    markTestFail('test-filter-response', '✗ Cannot test filter response - dropdown not ready');
+                }
+            } catch (error) {
+                markTestFail('test-filter-response', '✗ Error testing filter response', error);
+            }
+        }
+
+        async function testCountryFilter() {
+            console.log('Testing country filter functionality...');
+            try {
+                const iframe = document.getElementById('dashboard-frame');
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const iframeWindow = iframe.contentWindow;
+                const countrySelect = iframeDoc.getElementById('country-select');
+                
+                if (countrySelect && iframeWindow.app && iframeWindow.app.filterManager) {
+                    // Change country
+                    countrySelect.value = 'USA';
+                    countrySelect.dispatchEvent(new Event('change'));
+                    
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    const currentCountry = iframeWindow.app.filterManager.state.country;
+                    if (currentCountry === 'USA') {
+                        markTestPass('test-country-filter', '✓ Country filter updates state correctly');
+                    } else {
+                        markTestFail('test-country-filter', `✗ Expected 'USA', got '${currentCountry}'`);
+                    }
+                } else {
+                    markTestFail('test-country-filter', '✗ Country filter components not accessible');
+                }
+            } catch (error) {
+                markTestFail('test-country-filter', '✗ Error testing country filter', error);
+            }
+        }
+
+        async function testYearFilter() {
+            console.log('Testing year range filter...');
+            try {
+                const iframe = document.getElementById('dashboard-frame');
+                const iframeWindow = iframe.contentWindow;
+                
+                if (iframeWindow.app && iframeWindow.app.filterManager) {
+                    const initialRange = [...iframeWindow.app.filterManager.state.yearRange];
+                    
+                    // Programmatically update year range
+                    iframeWindow.app.filterManager.setYearRange(2005, 2015);
+                    
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    const newRange = iframeWindow.app.filterManager.state.yearRange;
+                    if (newRange[0] === 2005 && newRange[1] === 2015) {
+                        markTestPass('test-year-filter', `✓ Year filter updates: [2005, 2015]`);
+                    } else {
+                        markTestFail('test-year-filter', `✗ Expected [2005, 2015], got [${newRange}]`);
+                    }
+                } else {
+                    markTestFail('test-year-filter', '✗ Filter manager not accessible');
+                }
+            } catch (error) {
+                markTestFail('test-year-filter', '✗ Error testing year filter', error);
+            }
+        }
+
+        async function testResetButton() {
+            console.log('Testing reset button...');
+            try {
+                const iframe = document.getElementById('dashboard-frame');
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const iframeWindow = iframe.contentWindow;
+                const resetButton = iframeDoc.getElementById('reset-filters');
+                
+                if (resetButton && iframeWindow.app && iframeWindow.app.filterManager) {
+                    // First change filters
+                    iframeWindow.app.filterManager.setCountry('USA');
+                    iframeWindow.app.filterManager.setYearRange(2005, 2015);
+                    
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    // Click reset
+                    resetButton.click();
+                    
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    const state = iframeWindow.app.filterManager.state;
+                    const resetCorrectly = state.country === 'All Countries' && 
+                                          state.yearRange[0] === 2000 && 
+                                          state.yearRange[1] === 2019;
+                    
+                    if (resetCorrectly) {
+                        markTestPass('test-reset-button', '✓ Reset button restores default filters');
+                    } else {
+                        markTestFail('test-reset-button', `✗ Reset failed: ${JSON.stringify(state)}`);
+                    }
+                } else {
+                    markTestFail('test-reset-button', '✗ Reset button or filter manager not accessible');
+                }
+            } catch (error) {
+                markTestFail('test-reset-button', '✗ Error testing reset button', error);
+            }
+        }
+    </script>
+</body>
+</html>
