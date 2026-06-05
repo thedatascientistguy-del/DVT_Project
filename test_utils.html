@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utils Test - Energy Transition Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #0b0f1a;
+            color: #e5e7eb;
+        }
+        h1 {
+            color: #10b981;
+        }
+        h2 {
+            color: #06b6d4;
+            margin-top: 30px;
+        }
+        pre {
+            background-color: #111827;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #1f2937;
+            font-size: 13px;
+        }
+        .success {
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .warning {
+            color: #f59e0b;
+        }
+        button {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background-color: #059669;
+        }
+        .test-section {
+            background-color: #111827;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #1f2937;
+            margin: 20px 0;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 3px solid #10b981;
+            background-color: #0b0f1a;
+        }
+        .test-result.fail {
+            border-left-color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <h1>Utils.js Function Tests</h1>
+    <p>Testing all utility functions from utils.js module</p>
+    
+    <div>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="testWithRealData()">Test with Real Data</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <!-- Load D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- Load modules -->
+    <script type="module">
+        import { loadEnergyData } from './js/dataLoader.js';
+        import {
+            aggregateByYear,
+            filterByCountry,
+            filterByYearRange,
+            getUniqueCountries,
+            formatNumber,
+            formatPercent,
+            calculateGrowthRate,
+            aggregateMultipleMetrics,
+            calculateShare,
+            handleMissingData,
+            calculateWeightedAverage,
+            getTopN,
+            calculateLinearRegression,
+            normalizeToPercent
+        } from './js/utils.js';
+        
+        // Sample test data
+        const testData = [
+            { country: 'USA', year: 2015, total_energy: 2500, renewables_consumption: 500, greenhouse_gas_emissions: 5000, population: 320000000 },
+            { country: 'USA', year: 2016, total_energy: 2600, renewables_consumption: 550, greenhouse_gas_emissions: 5100, population: 323000000 },
+            { country: 'USA', year: 2017, total_energy: 2700, renewables_consumption: 600, greenhouse_gas_emissions: 5200, population: 326000000 },
+            { country: 'China', year: 2015, total_energy: 3000, renewables_consumption: 400, greenhouse_gas_emissions: 10000, population: 1370000000 },
+            { country: 'China', year: 2016, total_energy: 3200, renewables_consumption: 480, greenhouse_gas_emissions: 10300, population: 1380000000 },
+            { country: 'China', year: 2017, total_energy: 3400, renewables_consumption: 576, greenhouse_gas_emissions: 10600, population: 1390000000 },
+            { country: 'Germany', year: 2015, total_energy: 500, renewables_consumption: 150, greenhouse_gas_emissions: 800, population: 81000000 },
+            { country: 'Germany', year: 2016, total_energy: 510, renewables_consumption: 165, greenhouse_gas_emissions: 780, population: 82000000 },
+            { country: 'Germany', year: 2017, total_energy: 520, renewables_consumption: 180, greenhouse_gas_emissions: 760, population: 82500000 }
+        ];
+        
+        let testResults = [];
+        
+        function addTestResult(testName, passed, details = '') {
+            testResults.push({ testName, passed, details });
+        }
+        
+        window.runAllTests = function() {
+            testResults = [];
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>Running Tests...</h2>';
+            
+            // Test 1: aggregateByYear
+            try {
+                const aggregated = aggregateByYear(testData, 'total_energy');
+                const expected2015 = 6000; // 2500 + 3000 + 500
+                const result2015 = aggregated.find(d => d.year === 2015);
+                const passed = result2015 && result2015.value === expected2015;
+                addTestResult('aggregateByYear()', passed, 
+                    `Expected ${expected2015}, got ${result2015?.value || 'undefined'}`);
+            } catch (e) {
+                addTestResult('aggregateByYear()', false, e.message);
+            }
+            
+            // Test 2: filterByCountry
+            try {
+                const usaData = filterByCountry(testData, 'USA');
+                const allData = filterByCountry(testData, 'All Countries');
+                const passed = usaData.length === 3 && allData.length === testData.length;
+                addTestResult('filterByCountry()', passed, 
+                    `USA records: ${usaData.length}, All Countries: ${allData.length}`);
+            } catch (e) {
+                addTestResult('filterByCountry()', false, e.message);
+            }
+            
+            // Test 3: filterByYearRange
+            try {
+                const filtered = filterByYearRange(testData, 2015, 2016);
+                const passed = filtered.length === 6; // 3 countries * 2 years
+                addTestResult('filterByYearRange()', passed, 
+                    `Expected 6 records, got ${filtered.length}`);
+            } catch (e) {
+                addTestResult('filterByYearRange()', false, e.message);
+            }
+            
+            // Test 4: getUniqueCountries
+            try {
+                const countries = getUniqueCountries(testData);
+                const hasAllCountries = countries[0] === 'All Countries';
+                const hasExpected = countries.includes('USA') && countries.includes('China') && countries.includes('Germany');
+                const passed = hasAllCountries && hasExpected && countries.length === 4;
+                addTestResult('getUniqueCountries()', passed, 
+                    `Countries: ${countries.join(', ')}`);
+            } catch (e) {
+                addTestResult('getUniqueCountries()', false, e.message);
+            }
+            
+            // Test 5: formatNumber
+            try {
+                const tests = [
+                    { input: 1500000, expected: '1.50M' },
+                    { input: 2500, expected: '2.50K' },
+                    { input: 25, expected: '25.00' },
+                    { input: null, expected: 'N/A' },
+                    { input: 3500000000, expected: '3.50B' }
+                ];
+                const results = tests.map(t => ({
+                    ...t,
+                    actual: formatNumber(t.input),
+                    passed: formatNumber(t.input) === t.expected
+                }));
+                const allPassed = results.every(r => r.passed);
+                addTestResult('formatNumber()', allPassed, 
+                    results.map(r => `${r.input} -> ${r.actual} (expected ${r.expected})`).join(', '));
+            } catch (e) {
+                addTestResult('formatNumber()', false, e.message);
+            }
+            
+            // Test 6: formatPercent
+            try {
+                const tests = [
+                    { input: 45.6, expected: '45.6%' },
+                    { input: 100, expected: '100.0%' },
+                    { input: null, expected: 'N/A' }
+                ];
+                const results = tests.map(t => ({
+                    ...t,
+                    actual: formatPercent(t.input),
+                    passed: formatPercent(t.input) === t.expected
+                }));
+                const allPassed = results.every(r => r.passed);
+                addTestResult('formatPercent()', allPassed, 
+                    results.map(r => `${r.input} -> ${r.actual}`).join(', '));
+            } catch (e) {
+                addTestResult('formatPercent()', false, e.message);
+            }
+            
+            // Test 7: calculateGrowthRate
+            try {
+                const usaData = filterByCountry(testData, 'USA');
+                const growth = calculateGrowthRate(usaData, 'renewables_consumption');
+                // 2016: (550-500)/500 * 100 = 10%
+                const growth2016 = growth.find(g => g.year === 2016);
+                const passed = growth2016 && Math.abs(growth2016.growthRate - 10) < 0.01;
+                addTestResult('calculateGrowthRate()', passed, 
+                    `2016 growth: ${growth2016?.growthRate.toFixed(2)}% (expected 10%)`);
+            } catch (e) {
+                addTestResult('calculateGrowthRate()', false, e.message);
+            }
+            
+            // Test 8: aggregateMultipleMetrics
+            try {
+                const metrics = aggregateMultipleMetrics(testData, ['total_energy', 'renewables_consumption']);
+                const passed = metrics.length === 2 && metrics[0].metric === 'total_energy';
+                addTestResult('aggregateMultipleMetrics()', passed, 
+                    `Metrics: ${metrics.map(m => `${m.metric}: ${m.value.toFixed(2)}`).join(', ')}`);
+            } catch (e) {
+                addTestResult('aggregateMultipleMetrics()', false, e.message);
+            }
+            
+            // Test 9: calculateShare
+            try {
+                const share = calculateShare(25, 100);
+                const passed = share === 25;
+                addTestResult('calculateShare()', passed, 
+                    `25/100 = ${share}% (expected 25%)`);
+            } catch (e) {
+                addTestResult('calculateShare()', false, e.message);
+            }
+            
+            // Test 10: handleMissingData
+            try {
+                const tests = [
+                    { input: 123, expected: 123 },
+                    { input: null, expected: 0 },
+                    { input: undefined, expected: 0 }
+                ];
+                const results = tests.map(t => ({
+                    ...t,
+                    actual: handleMissingData(t.input),
+                    passed: handleMissingData(t.input) === t.expected
+                }));
+                const allPassed = results.every(r => r.passed);
+                addTestResult('handleMissingData()', allPassed, 
+                    results.map(r => `${r.input} -> ${r.actual}`).join(', '));
+            } catch (e) {
+                addTestResult('handleMissingData()', false, e.message);
+            }
+            
+            // Test 11: getTopN
+            try {
+                const top2 = getTopN(testData.filter(d => d.year === 2017), 'total_energy', 2);
+                const passed = top2.length === 2 && top2[0].country === 'China';
+                addTestResult('getTopN()', passed, 
+                    `Top 2: ${top2.map(d => `${d.country} (${d.total_energy})`).join(', ')}`);
+            } catch (e) {
+                addTestResult('getTopN()', false, e.message);
+            }
+            
+            // Test 12: normalizeToPercent
+            try {
+                const normalized = normalizeToPercent([25, 50, 25]);
+                const sum = normalized.reduce((a, b) => a + b, 0);
+                const passed = Math.abs(sum - 100) < 0.01;
+                addTestResult('normalizeToPercent()', passed, 
+                    `Sum: ${sum.toFixed(2)}% (expected 100%)`);
+            } catch (e) {
+                addTestResult('normalizeToPercent()', false, e.message);
+            }
+            
+            // Display results
+            displayResults();
+        };
+        
+        window.testWithRealData = async function() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>Loading real data...</h2>';
+            
+            try {
+                const data = await loadEnergyData();
+                testResults = [];
+                
+                // Test aggregateByYear with real data
+                const aggregated = aggregateByYear(data, 'total_energy');
+                addTestResult('Real Data: aggregateByYear()', aggregated.length > 0, 
+                    `Generated ${aggregated.length} year aggregations`);
+                
+                // Test getUniqueCountries with real data
+                const countries = getUniqueCountries(data);
+                addTestResult('Real Data: getUniqueCountries()', countries.length > 1, 
+                    `Found ${countries.length} unique countries`);
+                
+                // Test filterByCountry with real data
+                const usaData = filterByCountry(data, 'United States');
+                addTestResult('Real Data: filterByCountry()', usaData.length > 0, 
+                    `Found ${usaData.length} records for United States`);
+                
+                // Test calculateGrowthRate with real data
+                if (usaData.length > 0) {
+                    const growth = calculateGrowthRate(usaData, 'renewables_consumption');
+                    addTestResult('Real Data: calculateGrowthRate()', growth.length > 0, 
+                        `Calculated ${growth.length} growth rate points`);
+                }
+                
+                // Test formatting functions
+                const avgEnergy = d3.mean(data, d => d.total_energy);
+                const formatted = formatNumber(avgEnergy);
+                addTestResult('Real Data: formatNumber()', formatted.includes('K') || formatted.includes('M'), 
+                    `Average energy: ${formatted}`);
+                
+                displayResults();
+                
+            } catch (e) {
+                resultsDiv.innerHTML = `<h2 class="error">Error loading real data:</h2><pre>${e.message}</pre>`;
+            }
+        };
+        
+        function displayResults() {
+            const resultsDiv = document.getElementById('results');
+            const passedCount = testResults.filter(r => r.passed).length;
+            const totalCount = testResults.length;
+            const passRate = ((passedCount / totalCount) * 100).toFixed(1);
+            
+            const html = `
+                <h2>Test Results: ${passedCount}/${totalCount} Passed (${passRate}%)</h2>
+                <div class="test-section">
+                    ${testResults.map(r => `
+                        <div class="test-result ${r.passed ? '' : 'fail'}">
+                            <strong>${r.passed ? '✓' : '✗'} ${r.testName}</strong>
+                            ${r.details ? `<br><small>${r.details}</small>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

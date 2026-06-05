@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Loader Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #0b0f1a;
+            color: #e5e7eb;
+        }
+        h1 {
+            color: #10b981;
+        }
+        pre {
+            background-color: #111827;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid #1f2937;
+        }
+        .success {
+            color: #10b981;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .warning {
+            color: #f59e0b;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #059669;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background-color: #111827;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #1f2937;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Data Loader Test - Energy Transition Dashboard</h1>
+    <p>This page tests the dataLoader.js module by loading and validating the clean_energy.csv file.</p>
+    
+    <div>
+        <button onclick="testDataLoader()">Test Data Loader</button>
+        <button onclick="testValidation()">Test Validation</button>
+        <button onclick="showSampleRecords()">Show Sample Records</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <!-- Load D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- Load dataLoader module -->
+    <script type="module">
+        import { loadEnergyData, validateData } from './js/dataLoader.js';
+        
+        // Store data globally for testing
+        let globalData = null;
+        
+        // Make functions available globally
+        window.testDataLoader = async function() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Loading data...</p>';
+            
+            try {
+                globalData = await loadEnergyData();
+                
+                // Calculate statistics
+                const uniqueCountries = new Set(globalData.map(d => d.country));
+                const years = [...new Set(globalData.map(d => d.year))].sort();
+                const yearRange = `${years[0]} - ${years[years.length - 1]}`;
+                
+                // Calculate average energy consumption
+                const avgEnergy = d3.mean(globalData, d => d.total_energy);
+                
+                // Count records with emissions data
+                const emissionsCount = globalData.filter(d => d.greenhouse_gas_emissions != null).length;
+                const emissionsPct = (emissionsCount / globalData.length * 100).toFixed(1);
+                
+                resultsDiv.innerHTML = `
+                    <h2 class="success">✓ Data Loading Successful</h2>
+                    <div class="stats">
+                        <div class="stat-card">
+                            <div class="stat-value">${globalData.length.toLocaleString()}</div>
+                            <div class="stat-label">Total Records</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${uniqueCountries.size}</div>
+                            <div class="stat-label">Countries</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${yearRange}</div>
+                            <div class="stat-label">Year Range</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${avgEnergy.toFixed(0)}</div>
+                            <div class="stat-label">Avg Energy (TWh)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${emissionsPct}%</div>
+                            <div class="stat-label">Records with Emissions</div>
+                        </div>
+                    </div>
+                    <p><strong>Sample Countries:</strong> ${[...uniqueCountries].slice(0, 10).join(', ')}...</p>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <h2 class="error">✗ Data Loading Failed</h2>
+                    <pre class="error">${error.message}</pre>
+                `;
+            }
+        };
+        
+        window.testValidation = async function() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!globalData) {
+                resultsDiv.innerHTML = '<p class="warning">Please load data first by clicking "Test Data Loader"</p>';
+                return;
+            }
+            
+            try {
+                validateData(globalData);
+                resultsDiv.innerHTML = `
+                    <h2 class="success">✓ Validation Passed</h2>
+                    <p>All required fields are present and data integrity checks passed.</p>
+                    <p>Check the browser console for detailed data quality report.</p>
+                `;
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <h2 class="error">✗ Validation Failed</h2>
+                    <pre class="error">${error.message}</pre>
+                `;
+            }
+        };
+        
+        window.showSampleRecords = function() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!globalData) {
+                resultsDiv.innerHTML = '<p class="warning">Please load data first by clicking "Test Data Loader"</p>';
+                return;
+            }
+            
+            // Show first 5 records
+            const sampleRecords = globalData.slice(0, 5);
+            
+            resultsDiv.innerHTML = `
+                <h2>Sample Records (First 5)</h2>
+                <pre>${JSON.stringify(sampleRecords, null, 2)}</pre>
+            `;
+        };
+    </script>
+</body>
+</html>
