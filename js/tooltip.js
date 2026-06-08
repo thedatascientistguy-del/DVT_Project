@@ -84,6 +84,7 @@ class Tooltip {
       .append('div')
       .attr('class', 'tooltip')
       .style('position', 'fixed') // Changed to fixed positioning
+      .style('display', 'none') // Initially hidden
       .style('opacity', '0')
       .style('background-color', 'white')
       .style('color', '#1f2937')
@@ -100,6 +101,8 @@ class Tooltip {
       .style('transition', 'opacity 0.2s ease')
       .style('left', '0px')
       .style('top', '0px');
+    
+    console.log('Tooltip instance created'); // Debug log
   }
   
   /**
@@ -112,7 +115,10 @@ class Tooltip {
    * tooltip.show('<strong>Country:</strong> United States<br/><strong>Value:</strong> 1234 TWh', event);
    */
   show(content, event) {
+    console.log('Tooltip show called with content:', content); // Debug log
+    
     this.tooltip
+      .style('display', 'block') // Ensure it's displayed
       .style('opacity', '1')
       .html(content);
     
@@ -126,7 +132,10 @@ class Tooltip {
    * tooltip.hide();
    */
   hide() {
-    this.tooltip.style('opacity', '0');
+    console.log('Tooltip hide called'); // Debug log
+    this.tooltip
+      .style('opacity', '0')
+      .style('display', 'none');
   }
   
   /**
@@ -156,6 +165,8 @@ class Tooltip {
     let left = event.clientX + this.config.tooltip.offset.x;
     let top = event.clientY + this.config.tooltip.offset.y;
     
+    console.log('Tooltip position - left:', left, 'top:', top, 'width:', tooltipWidth, 'height:', tooltipHeight); // Debug log
+    
     // Prevent tooltip from going off-screen horizontally
     if (left + tooltipWidth > window.innerWidth) {
       // Flip to left of cursor if it would overflow right edge
@@ -182,6 +193,8 @@ class Tooltip {
     this.tooltip
       .style('left', left + 'px')
       .style('top', top + 'px');
+      
+    console.log('Final tooltip position - left:', left + 'px', 'top:', top + 'px'); // Debug log
   }
   
   /**
