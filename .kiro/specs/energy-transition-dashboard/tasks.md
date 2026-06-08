@@ -252,7 +252,7 @@ This implementation plan covers the complete development of an interactive D3.js
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6_
 
 - [ ] 11. Implement Visualization Charts - Correlation Analysis (Charts 12-13)
-  - [~] 11.1 Implement charts/gdpEnergyCorrelation.js (Chart 12)
+  - [ ] 11.1 Implement charts/gdpEnergyCorrelation.js (Chart 12)
     - Create scatter plot with log scale for GDP (x-axis)
     - Implement prepareData() averaging metrics across year range per country
     - Size circles by population using scaleSqrt()
@@ -261,7 +261,7 @@ This implementation plan covers the complete development of an interactive D3.js
     - Add circle fade-in and grow animation
     - _Requirements: 15.1, 15.2, 15.3, 15.4, 15.5, 15.6_
 
-  - [~] 11.2 Implement charts/energyEmissionsCorr.js (Chart 13)
+  - [ ] 11.2 Implement charts/energyEmissionsCorr.js (Chart 13)
     - Create scatter plot with color gradient for carbon_intensity_elec
     - Implement prepareData() similar to Chart 12
     - Use scaleSequential() with interpolateRdYlGn (reversed)
@@ -343,7 +343,7 @@ This implementation plan covers the complete development of an interactive D3.js
   - Verify all 15 charts update when filters change
   - Ask the user if questions arise
 
-- [~] 16. Testing and Quality Assurance
+- [ ] 16. Testing and Quality Assurance
   - [ ]* 16.1 Run all Python preprocessing tests
     - Execute unit tests for data_preprocessing.py
     - Execute unit tests for eda_analysis.py
@@ -390,7 +390,7 @@ This implementation plan covers the complete development of an interactive D3.js
     - Verify browser console shows no errors
     - _Requirements: 20.6, 22.2_
 
-- [~] 17. Documentation
+- [ ] 17. Documentation
   - [x] 17.1 Create README.md with project overview
     - Add project title and description
     - List 15 visualization features
@@ -425,7 +425,7 @@ This implementation plan covers the complete development of an interactive D3.js
     - Add module-level docstrings
     - _Requirements: 21.5_
 
-- [~] 18. Deployment Preparation
+- [ ] 18. Deployment Preparation
   - [x] 18.1 Configure project for GitHub Pages
     - Verify all file paths are relative (./data/, ./js/, ./css/)
     - Verify D3.js is loaded via CDN with integrity hash
@@ -447,15 +447,15 @@ This implementation plan covers the complete development of an interactive D3.js
     - Verify CORS compatibility for GitHub Pages
     - _Requirements: 20.6_
 
-- [~] 19. Final Validation and Deployment
-  - [~] 19.1 Final end-to-end testing
+- [ ] 19. Final Validation and Deployment
+  - [ ] 19.1 Final end-to-end testing
     - Run complete preprocessing pipeline
     - Load dashboard in multiple browsers
     - Test all interactions and visualizations
     - Verify all documentation is complete
     - Check that all files are committed to git
 
-  - [~] 19.2 Deploy to GitHub Pages
+  - [ ] 19.2 Deploy to GitHub Pages
     - Push code to GitHub repository
     - Enable GitHub Pages in repository settings
     - Set source to main branch, root directory
@@ -463,7 +463,7 @@ This implementation plan covers the complete development of an interactive D3.js
     - Test deployed version thoroughly
     - _Requirements: 24.1, 24.6_
 
-  - [~] 19.3 Final checkpoint and handoff
+  - [ ] 19.3 Final checkpoint and handoff
     - Ensure all tests pass
     - Verify dashboard is live and functional
     - Confirm documentation is complete

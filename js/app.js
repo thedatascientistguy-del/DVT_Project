@@ -35,6 +35,7 @@ import renderTransitionProgress from './charts/transitionProgress.js';
 import renderSolarWindGrowth from './charts/solarWindGrowth.js';
 import renderEmissionsPerCapita from './charts/emissionsPerCapita.js';
 import renderCoalDecline from './charts/coalDecline.js';
+import renderWorldEnergyMap from './charts/worldEnergyMap.js';
 
 /**
  * Global application state
@@ -158,7 +159,7 @@ function initializeControls() {
 
 /**
  * Initialize all chart visualizations
- * All 21 charts are imported and rendered
+ * All 22 charts are imported and rendered
  */
 async function initializeCharts() {
   const chartDefinitions = [
@@ -182,7 +183,8 @@ async function initializeCharts() {
     { id: 'chart-18', render: renderTransitionProgress, name: 'Energy Transition Progress' },
     { id: 'chart-19', render: renderSolarWindGrowth, name: 'Solar & Wind Growth' },
     { id: 'chart-20', render: renderEmissionsPerCapita, name: 'Emissions Per Capita Ranking' },
-    { id: 'chart-21', render: renderCoalDecline, name: 'Coal Consumption Trend' }
+    { id: 'chart-21', render: renderCoalDecline, name: 'Coal Consumption Trend' },
+    { id: 'chart-22', render: renderWorldEnergyMap, name: 'World Energy Map' }
   ];
   
   const initialFilterState = app.filterManager.getState();

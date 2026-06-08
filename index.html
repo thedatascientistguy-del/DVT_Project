@@ -9,6 +9,9 @@
     <!-- D3.js v7 CDN -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     
+    <!-- TopoJSON for map visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+    
     <!-- noUiSlider for dual-handle range slider -->
     <link rel="stylesheet" 
           href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
@@ -21,7 +24,7 @@
     <!-- Dashboard Header -->
     <header class="dashboard-header">
         <h1>Energy Transition Analytics Dashboard</h1>
-        <p class="subtitle">Global Energy Trends 2000-2019 • 21 Interactive Visualizations</p>
+        <p class="subtitle">Global Energy Trends 2000-2019 • 22 Interactive Visualizations</p>
     </header>
     
     <!-- Control Panel -->
@@ -198,6 +201,17 @@
             <div class="chart-row">
                 <div class="chart-container chart-full" id="chart-21">
                     <h3 class="chart-title">Coal Consumption Trend</h3>
+                    <div class="chart-content"></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- World Energy Map (Chart 22) -->
+        <section class="chart-section">
+            <h2 class="section-title">Global Energy Map</h2>
+            <div class="chart-row">
+                <div class="chart-container chart-full" id="chart-22">
+                    <h3 class="chart-title">World Energy Consumption by Country</h3>
                     <div class="chart-content"></div>
                 </div>
             </div>
