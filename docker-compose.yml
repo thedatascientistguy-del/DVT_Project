@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  energy-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: energy-transition-dashboard
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "com.energy-dashboard.description=Energy Transition Analytics Dashboard"
+      - "com.energy-dashboard.version=1.0.0"

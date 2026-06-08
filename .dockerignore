@@ -1,0 +1,44 @@
+# Git files
+.git
+.gitignore
+
+# Kiro files
+.kiro/
+
+# VS Code
+.vscode/
+
+# Python files
+*.py
+*.pyc
+__pycache__/
+preprocessing/
+
+# Documentation and test files
+*.md
+CHECKPOINT_*.md
+TASK_*.md
+CHART_*.md
+test_*.html
+validate_*.py
+verify_*.py
+check_*.py
+checkpoint_*.py
+
+# Reports
+report/
+
+# Node modules (if any)
+node_modules/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files
+Dockerfile
+.dockerignore
+docker-compose.yml
